@@ -838,7 +838,7 @@
       el.meterFill.style.width = meterPct + '%';
 
       const now = Date.now();
-      const crossed = db > state.threshold;
+      const crossed = meterPct > state.threshold;
 
       if (crossed) {
         state.lastSoundAt = now;
