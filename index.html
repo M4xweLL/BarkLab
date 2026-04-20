@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1.2</title>
+  <title>Poodle MVP 1</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -31,19 +31,16 @@
     }
 
     .app {
-      max-width: 980px;
+      max-width: 820px;
       margin: 0 auto;
       padding: 18px 14px 38px;
     }
 
-    .hero, .card {
+    .hero {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 24px;
       box-shadow: var(--shadow);
-    }
-
-    .hero {
       padding: 18px;
       margin-bottom: 14px;
     }
@@ -66,7 +63,7 @@
       grid-template-columns: 1fr;
     }
 
-    @media (min-width: 900px) {
+    @media (min-width: 820px) {
       .grid {
         grid-template-columns: 340px 1fr;
         align-items: start;
@@ -74,7 +71,10 @@
     }
 
     .card {
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding: 16px;
     }
 
@@ -128,7 +128,7 @@
       font-weight: 600;
     }
 
-    input[type="range"], select, input[type="number"] {
+    input[type="range"], select {
       width: 100%;
     }
 
@@ -151,7 +151,7 @@
     }
 
     .btn:active { transform: scale(0.98); }
-    .btn:disabled, .small-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -299,44 +299,6 @@
       margin: 10px 0;
     }
 
-    .trim-box {
-      border: 1px solid var(--border);
-      background: #f8faff;
-      border-radius: 14px;
-      padding: 10px;
-      margin: 10px 0 12px;
-    }
-
-    .trim-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .trim-grid input {
-      min-height: 42px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: white;
-      padding: 0 10px;
-      font-size: 0.95rem;
-    }
-
-    .trim-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-
-    .trim-note {
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1.45;
-      margin-top: 6px;
-    }
-
     .event-actions {
       display: grid;
       grid-template-columns: 1fr auto auto;
@@ -369,28 +331,109 @@
       border: 1px solid #c8f1d8;
     }
 
-    .preview-btn {
-      background: #eef3ff;
-      color: var(--accent);
-      border: 1px solid #d7e0ff;
-    }
-
-    .reset-btn {
-      background: #fff9eb;
-      color: var(--warning);
-      border: 1px solid #ffe1a3;
-    }
-
     .delete-btn {
       background: #fff2f3;
       color: var(--danger);
       border: 1px solid #ffd8dc;
     }
 
-    .help, .footer-note {
+    .trim-box {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #f8faff;
+    }
+
+    .trim-title {
+      font-weight: 800;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .trim-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+
+    .trim-control-row {
+      display: grid;
+      grid-template-columns: 1fr 92px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .trim-number {
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      padding: 0 10px;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+
+    .trim-values {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .trim-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .tiny-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tiny-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .trim-preview-btn {
+      background: #f3f7ff;
+      color: var(--accent);
+      border-color: #d3e5ff;
+    }
+
+    .trim-save-btn {
+      background: #eef6ff;
+      color: var(--accent);
+      border-color: #d3e5ff;
+    }
+
+    .trim-reset-btn {
+      background: #fffaf1;
+      color: var(--warning);
+      border-color: #ffe2b0;
+    }
+
+    .help {
       margin-top: 12px;
       color: var(--muted);
       font-size: 0.83rem;
+      line-height: 1.5;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.82rem;
       line-height: 1.5;
     }
 
@@ -408,9 +451,9 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1.2</h1>
+      <h1>Poodle MVP 1</h1>
       <div class="sub">
-        Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. Ahora puedes previsualizar un recorte antes de guardarlo.
+        Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
       </div>
     </section>
 
@@ -465,11 +508,11 @@
         </div>
 
         <div class="notice">
-          Recomendación: acerca el celular al poodle, usa escucha por sesiones cortas y, si tu voz quedó al inicio, prueba el recorte antes de guardar los cambios.
+          Recomendación: acerca el celular al poodle, usa el modo escucha solo cuando quieras observar una situación concreta y corrige etiquetas cuando te equivoques.
         </div>
 
         <div class="help">
-          Las etiquetas y recortes quedan guardados localmente en este navegador. Si borras los datos del navegador o cambias de dispositivo, no se sincronizan.
+          Las etiquetas quedan guardadas localmente en este navegador. Si borras los datos del navegador o cambias de dispositivo, no se sincronizan.
         </div>
       </div>
 
@@ -485,7 +528,7 @@
         <div id="eventList" class="event-list"></div>
 
         <div class="footer-note">
-          Categorías sugeridas: Alerta, Atención, Salir, Juego/emoción, Comida/premio, Gemido/malestar, No sé y Ruido/falso positivo.
+          Categorías sugeridas: Alerta, Atención, Salir, Juego/emoción, Gemido/malestar, No sé y Ruido/falso positivo.
         </div>
       </div>
     </section>
@@ -496,17 +539,16 @@
       'Alerta',
       'Atención',
       'Salir',
-      'Juego / emoción',
       'Comida / premio',
+      'Juego / emoción',
       'Gemido / malestar',
       'No sé',
       'Ruido / falso positivo'
     ];
 
     const DB_NAME = 'poodle-mvp1-db';
-    const DB_VERSION = 2;
+    const DB_VERSION = 1;
     const STORE_NAME = 'events';
-    const PREVIEW_MIN_MS = 100;
 
     const state = {
       db: null,
@@ -597,8 +639,8 @@
       });
     }
 
-    function tx(mode = 'readonly') {
-      return state.db.transaction(STORE_NAME, mode).objectStore(STORE_NAME);
+    function tx(storeMode = 'readonly') {
+      return state.db.transaction(STORE_NAME, storeMode).objectStore(STORE_NAME);
     }
 
     function addEventToDb(record) {
@@ -715,63 +757,125 @@
       return 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+
+    function parseDecimalValue(rawValue, fallback = 0) {
+      const normalized = String(rawValue ?? '').trim().replace(',', '.');
+      if (normalized === '') return fallback;
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : fallback;
     }
 
-    function getTrimDurationMs(row, trimStartMs, trimEndMs) {
-      return Math.max(PREVIEW_MIN_MS, row.durationMs - trimStartMs - trimEndMs);
+    async function blobToAudioBuffer(blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        return await ctx.decodeAudioData(arrayBuffer.slice(0));
+      } finally {
+        await ctx.close();
+      }
     }
 
-    function clampTrimValues(row, startMs, endMs) {
-      let start = Math.max(0, Math.round(startMs));
-      let end = Math.max(0, Math.round(endMs));
-      const maxTotal = Math.max(0, row.durationMs - PREVIEW_MIN_MS);
-      if (start + end > maxTotal) {
-        const overflow = start + end - maxTotal;
-        if (end >= overflow) end -= overflow;
-        else {
-          start = Math.max(0, start - (overflow - end));
-          end = 0;
+    function copySegmentToBuffer(sourceBuffer, startSample, endSample) {
+      const frameCount = Math.max(1, endSample - startSample);
+      const trimmed = new AudioBuffer({
+        length: frameCount,
+        numberOfChannels: sourceBuffer.numberOfChannels,
+        sampleRate: sourceBuffer.sampleRate
+      });
+      for (let ch = 0; ch < sourceBuffer.numberOfChannels; ch += 1) {
+        const sourceData = sourceBuffer.getChannelData(ch);
+        const targetData = trimmed.getChannelData(ch);
+        targetData.set(sourceData.subarray(startSample, endSample));
+      }
+      return trimmed;
+    }
+
+    function audioBufferToWavBlob(buffer) {
+      const numberOfChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const bitDepth = 16;
+      const samples = buffer.length;
+      const blockAlign = numberOfChannels * bitDepth / 8;
+      const byteRate = sampleRate * blockAlign;
+      const dataSize = samples * blockAlign;
+      const bufferSize = 44 + dataSize;
+      const arrayBuffer = new ArrayBuffer(bufferSize);
+      const view = new DataView(arrayBuffer);
+
+      let offset = 0;
+      const writeString = (str) => {
+        for (let i = 0; i < str.length; i += 1) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+        offset += str.length;
+      };
+
+      writeString('RIFF');
+      view.setUint32(offset, 36 + dataSize, true); offset += 4;
+      writeString('WAVE');
+      writeString('fmt ');
+      view.setUint32(offset, 16, true); offset += 4;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint16(offset, numberOfChannels, true); offset += 2;
+      view.setUint32(offset, sampleRate, true); offset += 4;
+      view.setUint32(offset, byteRate, true); offset += 4;
+      view.setUint16(offset, blockAlign, true); offset += 2;
+      view.setUint16(offset, bitDepth, true); offset += 2;
+      writeString('data');
+      view.setUint32(offset, dataSize, true); offset += 4;
+
+      const channels = [];
+      for (let ch = 0; ch < numberOfChannels; ch += 1) {
+        channels.push(buffer.getChannelData(ch));
+      }
+
+      let pos = offset;
+      for (let i = 0; i < samples; i += 1) {
+        for (let ch = 0; ch < numberOfChannels; ch += 1) {
+          let sample = channels[ch][i] || 0;
+          sample = Math.max(-1, Math.min(1, sample));
+          view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          pos += 2;
         }
       }
-      return { start, end };
+
+      return new Blob([arrayBuffer], { type: 'audio/wav' });
     }
 
-    function getDraftTrimMs(item, row) {
-      const startInput = item.querySelector('[data-trim-start]');
-      const endInput = item.querySelector('[data-trim-end]');
-      const startMs = Number(startInput.value || 0) * 1000;
-      const endMs = Number(endInput.value || 0) * 1000;
-      return clampTrimValues(row, startMs, endMs);
+    async function trimBlobByTime(blob, startMs, endMs) {
+      const sourceBuffer = await blobToAudioBuffer(blob);
+      const totalMs = Math.round(sourceBuffer.duration * 1000);
+      const safeStartMs = Math.max(0, Math.min(totalMs - 120, Math.round(startMs)));
+      const safeEndMs = Math.max(safeStartMs + 120, Math.min(totalMs, Math.round(endMs)));
+      const startSample = Math.max(0, Math.floor((safeStartMs / 1000) * sourceBuffer.sampleRate));
+      const endSample = Math.min(sourceBuffer.length, Math.ceil((safeEndMs / 1000) * sourceBuffer.sampleRate));
+      const trimmedBuffer = copySegmentToBuffer(sourceBuffer, startSample, endSample);
+      return {
+        blob: audioBufferToWavBlob(trimmedBuffer),
+        durationMs: Math.round(trimmedBuffer.duration * 1000)
+      };
     }
 
-    function updateTrimSummary(item, row, trimStartMs, trimEndMs, dirty = false) {
-      const summary = item.querySelector('[data-trim-summary]');
-      if (!summary) return;
-      const usefulMs = getTrimDurationMs(row, trimStartMs, trimEndMs);
-      const extra = dirty ? ' · cambios sin guardar' : '';
-      summary.textContent = `Inicio: ${(trimStartMs / 1000).toFixed(2)} s · Fin: ${(trimEndMs / 1000).toFixed(2)} s · Queda aprox.: ${(usefulMs / 1000).toFixed(2)} s${extra}`;
+    function clampTrimValues(startVal, endVal, durationSec, source = 'start') {
+      let safeStart = Math.max(0, Math.min(durationSec, parseDecimalValue(startVal, 0)));
+      let safeEnd = Math.max(0.10, Math.min(durationSec, parseDecimalValue(endVal, durationSec)));
+
+      if (safeStart > safeEnd - 0.1) {
+        if (source === 'start') {
+          safeEnd = Math.min(durationSec, safeStart + 0.1);
+          if (safeEnd <= safeStart) safeStart = Math.max(0, safeEnd - 0.1);
+        } else {
+          safeStart = Math.max(0, safeEnd - 0.1);
+        }
+      }
+
+      return {
+        startVal: Number(safeStart.toFixed(2)),
+        endVal: Number(safeEnd.toFixed(2))
+      };
     }
 
-    function syncTrimInputs(item, row, trimStartMs, trimEndMs, dirty = false) {
-      const startInput = item.querySelector('[data-trim-start]');
-      const endInput = item.querySelector('[data-trim-end]');
-      if (!startInput || !endInput) return;
-      const maxSeconds = Math.max(0, (row.durationMs - PREVIEW_MIN_MS) / 1000).toFixed(2);
-      startInput.max = maxSeconds;
-      endInput.max = maxSeconds;
-      startInput.value = (trimStartMs / 1000).toFixed(2);
-      endInput.value = (trimEndMs / 1000).toFixed(2);
-      updateTrimSummary(item, row, trimStartMs, trimEndMs, dirty);
-    }
-
-    function stopAudioAtTrim(audio, stopAtSec) {
+    function attachPreviewStop(audio, stopAtSec) {
       const onTimeUpdate = () => {
         if (audio.currentTime >= stopAtSec) {
           audio.pause();
@@ -780,19 +884,6 @@
       };
       audio.addEventListener('timeupdate', onTimeUpdate);
       audio.onended = () => audio.removeEventListener('timeupdate', onTimeUpdate);
-    }
-
-    function previewTrim(item, row) {
-      const audio = item.querySelector('audio');
-      if (!audio) return;
-      const { start, end } = getDraftTrimMs(item, row);
-      syncTrimInputs(item, row, start, end, true);
-      const stopAtSec = Math.max(start / 1000, (row.durationMs - end) / 1000);
-      audio.pause();
-      audio.currentTime = start / 1000;
-      stopAudioAtTrim(audio, stopAtSec);
-      audio.play().catch(() => {});
-      updateStatus('Previsualizando recorte', false);
     }
 
     async function renderEvents() {
@@ -809,83 +900,129 @@
       rows.forEach((row) => {
         const item = document.createElement('article');
         item.className = 'event';
-        const trimStartMs = Number(row.trimStartMs || 0);
-        const trimEndMs = Number(row.trimEndMs || 0);
+
         const url = URL.createObjectURL(row.audioBlob);
         const options = LABELS.map((label) => {
           const selected = row.label === label ? 'selected' : '';
           return `<option value="${escapeHtml(label)}" ${selected}>${escapeHtml(label)}</option>`;
         }).join('');
 
+        const safeDurationSec = Math.max(0.10, Number((row.durationMs / 1000).toFixed(2)));
+        const trimStartSec = Number((((row.trimStartMs || 0) / 1000))).toFixed(2);
+        const trimEndSec = Number((row.trimEndMs != null ? (row.trimEndMs / 1000) : safeDurationSec)).toFixed(2);
+
         item.innerHTML = `
           <div class="event-top">
             <div>
               <div class="event-time">${formatDateTime(row.createdAt)}</div>
-              <div class="event-meta">Duración original: ${formatDuration(row.durationMs)} · Pico aprox.: ${row.peakHz || 0} Hz · Nivel: ${Number(row.dbPeak || 0).toFixed(1)} dB</div>
+              <div class="event-meta">Duración: ${formatDuration(row.durationMs)} · Pico aprox.: ${row.peakHz || 0} Hz · Nivel: ${Number(row.dbPeak || 0).toFixed(1)} dB</div>
+              <div class="event-meta">${escapeHtml(row.trimInfo || 'Sin recorte manual')}</div>
             </div>
             <span class="badge">${escapeHtml(row.autoGuess || 'Sin sugerencia')}</span>
           </div>
 
           <audio controls preload="metadata" src="${url}"></audio>
 
-          <div class="trim-box">
-            <div style="font-weight:800; margin-bottom:8px;">Recorte simple</div>
-            <div class="trim-grid">
-              <div>
-                <label>Quitar al inicio (segundos)</label>
-                <input data-trim-start type="number" min="0" step="0.05" value="${(trimStartMs / 1000).toFixed(2)}" />
-              </div>
-              <div>
-                <label>Quitar al final (segundos)</label>
-                <input data-trim-end type="number" min="0" step="0.05" value="${(trimEndMs / 1000).toFixed(2)}" />
-              </div>
-            </div>
-            <div class="trim-row">
-              <button class="small-btn preview-btn" data-preview-id="${row.id}">Probar recorte</button>
-              <button class="small-btn reset-btn" data-reset-id="${row.id}">Restablecer</button>
-            </div>
-            <div class="trim-note" data-trim-summary></div>
-          </div>
-
           <div class="event-actions">
             <select data-id="${row.id}" aria-label="Cambiar etiqueta">
               ${options}
             </select>
-            <button class="small-btn save-btn" data-save-id="${row.id}">Guardar cambios</button>
+            <button class="small-btn save-btn" data-save-id="${row.id}">Guardar</button>
             <button class="small-btn delete-btn" data-delete-id="${row.id}">Eliminar</button>
+          </div>
+
+          <div class="trim-box">
+            <div class="trim-title">Recorte simple del clip</div>
+            <div class="trim-grid">
+              <div>
+                <label for="trimStart_${row.id}">Inicio del recorte: <strong data-start-label>${trimStartSec} s</strong></label>
+                <div class="trim-control-row">
+                  <input id="trimStart_${row.id}" type="range" min="0" max="${safeDurationSec.toFixed(2)}" step="0.05" value="${trimStartSec}" data-trim-start />
+                  <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false" class="trim-number" value="${trimStartSec}" aria-label="Inicio del recorte en segundos" data-trim-start-text />
+                </div>
+              </div>
+              <div>
+                <label for="trimEnd_${row.id}">Fin del recorte: <strong data-end-label>${trimEndSec} s</strong></label>
+                <div class="trim-control-row">
+                  <input id="trimEnd_${row.id}" type="range" min="0.10" max="${safeDurationSec.toFixed(2)}" step="0.05" value="${trimEndSec}" data-trim-end />
+                  <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false" class="trim-number" value="${trimEndSec}" aria-label="Fin del recorte en segundos" data-trim-end-text />
+                </div>
+              </div>
+            </div>
+            <div class="trim-values">Puedes mover el deslizador o escribir los segundos. Usa coma o punto si quieres decimales.</div>
+            <div class="trim-actions">
+              <button class="tiny-btn trim-preview-btn" data-trim-preview-id="${row.id}">Probar recorte</button>
+              <button class="tiny-btn trim-save-btn" data-trim-id="${row.id}">Aplicar recorte</button>
+              <button class="tiny-btn trim-reset-btn" data-trim-reset-id="${row.id}">Restablecer</button>
+            </div>
           </div>
         `;
 
-        syncTrimInputs(item, row, trimStartMs, trimEndMs, false);
-
+        const select = item.querySelector('select');
         const audio = item.querySelector('audio');
-        audio.addEventListener('loadedmetadata', () => {
-          if (row.trimStartMs || row.trimEndMs) {
-            audio.currentTime = Number(row.trimStartMs || 0) / 1000;
+        const trimStartInput = item.querySelector('[data-trim-start]');
+        const trimEndInput = item.querySelector('[data-trim-end]');
+        const trimStartText = item.querySelector('[data-trim-start-text]');
+        const trimEndText = item.querySelector('[data-trim-end-text]');
+        const startLabel = item.querySelector('[data-start-label]');
+        const endLabel = item.querySelector('[data-end-label]');
+
+        const getTrimValues = (source = 'start') => {
+          return clampTrimValues(
+            trimStartText.value !== '' ? trimStartText.value : trimStartInput.value,
+            trimEndText.value !== '' ? trimEndText.value : trimEndInput.value,
+            safeDurationSec,
+            source
+          );
+        };
+
+        const applyTrimValuesToControls = (values, rewriteText = true) => {
+          trimStartInput.value = values.startVal.toFixed(2);
+          trimEndInput.value = values.endVal.toFixed(2);
+          if (rewriteText) {
+            trimStartText.value = values.startVal.toFixed(2);
+            trimEndText.value = values.endVal.toFixed(2);
           }
+          startLabel.textContent = values.startVal.toFixed(2) + ' s';
+          endLabel.textContent = values.endVal.toFixed(2) + ' s';
+        };
+
+        trimStartInput.addEventListener('input', () => {
+          const values = clampTrimValues(trimStartInput.value, trimEndInput.value, safeDurationSec, 'start');
+          applyTrimValuesToControls(values, true);
         });
 
-        item.querySelector('[data-preview-id]').addEventListener('click', () => {
-          previewTrim(item, row);
+        trimEndInput.addEventListener('input', () => {
+          const values = clampTrimValues(trimStartInput.value, trimEndInput.value, safeDurationSec, 'end');
+          applyTrimValuesToControls(values, true);
         });
 
-        item.querySelector('[data-reset-id]').addEventListener('click', () => {
-          syncTrimInputs(item, row, Number(row.trimStartMs || 0), Number(row.trimEndMs || 0), false);
-          updateStatus('Recorte restablecido', false);
-        });
+        const onTextInput = (source) => {
+          const values = getTrimValues(source);
+          trimStartInput.value = values.startVal.toFixed(2);
+          trimEndInput.value = values.endVal.toFixed(2);
+          startLabel.textContent = values.startVal.toFixed(2) + ' s';
+          endLabel.textContent = values.endVal.toFixed(2) + ' s';
+        };
+
+        const onTextBlur = (source) => {
+          const values = getTrimValues(source);
+          applyTrimValuesToControls(values, true);
+        };
+
+        trimStartText.addEventListener('input', () => onTextInput('start'));
+        trimEndText.addEventListener('input', () => onTextInput('end'));
+        trimStartText.addEventListener('blur', () => onTextBlur('start'));
+        trimEndText.addEventListener('blur', () => onTextBlur('end'));
 
         item.querySelector('[data-save-id]').addEventListener('click', async (ev) => {
           const id = ev.currentTarget.getAttribute('data-save-id');
-          const select = item.querySelector('select');
           const record = await getEventById(id);
           if (!record) return;
-          const { start, end } = getDraftTrimMs(item, record);
           record.label = select.value;
-          record.trimStartMs = start;
-          record.trimEndMs = end;
           await putEvent(record);
-          updateStatus('Etiqueta y recorte guardados', false);
-          await renderEvents();
+          updateStatus('Etiqueta guardada', false);
+          renderEvents();
         });
 
         item.querySelector('[data-delete-id]').addEventListener('click', async (ev) => {
@@ -894,20 +1031,70 @@
           if (!ok) return;
           await deleteEventFromDb(id);
           updateStatus('Clip eliminado', false);
-          await renderEvents();
+          renderEvents();
         });
 
-        const startInput = item.querySelector('[data-trim-start]');
-        const endInput = item.querySelector('[data-trim-end]');
-        const onTrimChange = () => {
-          const { start, end } = getDraftTrimMs(item, row);
-          syncTrimInputs(item, row, start, end, true);
-        };
-        startInput.addEventListener('input', onTrimChange);
-        endInput.addEventListener('input', onTrimChange);
+        item.querySelector('[data-trim-preview-id]').addEventListener('click', () => {
+          const values = getTrimValues('end');
+          applyTrimValuesToControls(values, true);
+          audio.pause();
+          audio.currentTime = values.startVal;
+          attachPreviewStop(audio, values.endVal);
+          audio.play().catch(() => {});
+          updateStatus('Previsualizando recorte', false);
+        });
+
+        item.querySelector('[data-trim-id]').addEventListener('click', async (ev) => {
+          const id = ev.currentTarget.getAttribute('data-trim-id');
+          const record = await getEventById(id);
+          if (!record) return;
+
+          const values = getTrimValues('end');
+          applyTrimValuesToControls(values, true);
+
+          try {
+            ev.currentTarget.disabled = true;
+            ev.currentTarget.textContent = 'Recortando…';
+            const trimmed = await trimBlobByTime(record.audioBlob, values.startVal * 1000, values.endVal * 1000);
+            record.audioBlob = trimmed.blob;
+            record.durationMs = trimmed.durationMs;
+            record.trimStartMs = 0;
+            record.trimEndMs = trimmed.durationMs;
+            record.trimInfo = `Recorte manual aplicado (${values.startVal.toFixed(2)} s a ${values.endVal.toFixed(2)} s)`;
+            await putEvent(record);
+            updateStatus('Recorte guardado', false);
+            renderEvents();
+          } catch (error) {
+            alert(error.message || 'No se pudo recortar el audio.');
+          } finally {
+            ev.currentTarget.disabled = false;
+            ev.currentTarget.textContent = 'Aplicar recorte';
+          }
+        });
+
+        item.querySelector('[data-trim-reset-id]').addEventListener('click', () => {
+          applyTrimValuesToControls({
+            startVal: Number((((row.trimStartMs || 0) / 1000)).toFixed(2)),
+            endVal: Number((row.trimEndMs != null ? (row.trimEndMs / 1000) : safeDurationSec).toFixed(2))
+          }, true);
+          updateStatus('Recorte restablecido', false);
+        });
+
+        audio.addEventListener('loadeddata', () => {
+          URL.revokeObjectURL(url);
+        }, { once: true });
 
         el.eventList.appendChild(item);
       });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function resetSessionCounters() {
@@ -935,8 +1122,8 @@
       if (state.mediaRecorder && state.mediaRecorder.state === 'recording') return;
 
       state.chunks = [];
-      const preferredMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      state.mediaRecorder = new MediaRecorder(state.stream, { mimeType: preferredMime });
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      state.mediaRecorder = new MediaRecorder(state.stream, { mimeType: mime });
 
       state.mediaRecorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) state.chunks.push(e.data);
@@ -961,8 +1148,6 @@
           durationMs: clipMs,
           peakHz: state.lastPeakHz || 0,
           dbPeak: state.lastDbPeak || 0,
-          trimStartMs: 0,
-          trimEndMs: 0,
           audioBlob
         };
 
@@ -972,7 +1157,7 @@
         state.currentGuess = autoGuess;
         el.lastGuess.textContent = autoGuess;
         updateStatus('Evento guardado. Revisa y etiqueta.', true);
-        await renderEvents();
+        renderEvents();
       };
 
       state.mediaRecorder.start();
@@ -1076,6 +1261,7 @@
     async function stopListening(reason = 'Escucha detenida') {
       state.isListening = false;
       state.eventActive = false;
+
       clearInterval(state.sessionTimer);
       clearTimeout(state.recorderTimeout);
       if (state.animationId) cancelAnimationFrame(state.animationId);
@@ -1118,7 +1304,7 @@
         if (!ok) return;
         await clearAllEvents();
         updateStatus('Todo el historial fue eliminado', false);
-        await renderEvents();
+        renderEvents();
       });
 
       window.addEventListener('beforeunload', () => {
