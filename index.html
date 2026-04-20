@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1.8</title>
+  <title>Poodle MVP 1.9</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -451,7 +451,7 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1.8</h1>
+      <h1>Poodle MVP 1.9</h1>
       <div class="sub">
         Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
       </div>
@@ -1242,14 +1242,36 @@
           renderEvents();
         });
 
-        item.querySelector('[data-trim-preview-id]').addEventListener('click', () => {
+        item.querySelector('[data-trim-preview-id]').addEventListener('click', async (ev) => {
+          const previewBtn = ev.currentTarget;
           const values = getTrimValues('end');
           applyTrimValuesToControls(values, true);
-          audio.pause();
-          audio.currentTime = values.startVal;
-          attachPreviewStop(audio, values.endVal);
-          audio.play().catch(() => {});
-          updateStatus('Previsualizando recorte', false);
+
+          try {
+            if (previewBtn) {
+              previewBtn.disabled = true;
+              previewBtn.textContent = 'Preparando…';
+            }
+            const sourceBlob = await getAudioBlobFromRecord(row);
+            if (!sourceBlob) throw new Error('No se pudo cargar el audio del clip.');
+            const previewTrim = await trimBlobByTime(sourceBlob, values.startVal * 1000, values.endVal * 1000);
+            const previewUrl = URL.createObjectURL(previewTrim.blob);
+            const previewAudio = new Audio(previewUrl);
+            const cleanupPreview = () => {
+              try { URL.revokeObjectURL(previewUrl); } catch (_) {}
+            };
+            previewAudio.addEventListener('ended', cleanupPreview, { once: true });
+            previewAudio.addEventListener('error', cleanupPreview, { once: true });
+            previewAudio.play().catch(() => cleanupPreview());
+            updateStatus('Previsualizando recorte exacto', false);
+          } catch (error) {
+            alert(error.message || 'No se pudo previsualizar el recorte.');
+          } finally {
+            if (previewBtn && previewBtn.isConnected) {
+              previewBtn.disabled = false;
+              previewBtn.textContent = 'Probar recorte';
+            }
+          }
         });
 
         item.querySelector('[data-trim-id]').addEventListener('click', async (ev) => {
