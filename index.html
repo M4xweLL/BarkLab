@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1.7</title>
+  <title>Poodle MVP 1.8</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -451,7 +451,7 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1.7</h1>
+      <h1>Poodle MVP 1.8</h1>
       <div class="sub">
         Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
       </div>
@@ -843,9 +843,23 @@
       return null;
     }
 
+    function cleanupActiveObjectUrls() {
+      if (!Array.isArray(state.activeObjectUrls) || !state.activeObjectUrls.length) return;
+      state.activeObjectUrls.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (_) {}
+      });
+      state.activeObjectUrls = [];
+    }
+
     function getAudioSrcFromRecord(record) {
       if (!record) return '';
-      if (record.audioBlob instanceof Blob) return URL.createObjectURL(record.audioBlob);
+      if (record.audioBlob instanceof Blob) {
+        const objectUrl = URL.createObjectURL(record.audioBlob);
+        state.activeObjectUrls.push(objectUrl);
+        return objectUrl;
+      }
       if (record.audioDataUrl) return record.audioDataUrl;
       return '';
     }
