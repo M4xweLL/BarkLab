@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1.6</title>
+  <title>Poodle MVP 1.7</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -451,7 +451,7 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1.6</h1>
+      <h1>Poodle MVP 1.7</h1>
       <div class="sub">
         Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
       </div>
@@ -589,7 +589,8 @@
       silenceHoldMs: 650,
       minClipMs: 220,
       minCooldownMs: 900,
-      currentGuess: '—'
+      currentGuess: '—',
+      activeObjectUrls: []
     };
 
     const el = {
@@ -1079,6 +1080,7 @@
     }
 
     async function renderEvents() {
+      cleanupActiveObjectUrls();
       const rows = await getAllEvents();
       el.eventsCount.textContent = rows.length + (rows.length === 1 ? ' evento' : ' eventos');
 
@@ -1280,12 +1282,6 @@
           }, true);
           updateStatus('Recorte restablecido', false);
         });
-
-        if (url && url.startsWith('blob:')) {
-          audio.addEventListener('loadeddata', () => {
-            URL.revokeObjectURL(url);
-          }, { once: true });
-        }
 
         el.eventList.appendChild(item);
       });
@@ -1596,6 +1592,7 @@
       });
 
       window.addEventListener('beforeunload', () => {
+        cleanupActiveObjectUrls();
         if (state.stream) state.stream.getTracks().forEach((track) => track.stop());
       });
     }
