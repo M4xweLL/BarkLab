@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1</title>
+  <title>Poodle MVP 1.4</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -451,7 +451,7 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1</h1>
+      <h1>Poodle MVP 1.4</h1>
       <div class="sub">
         Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
       </div>
@@ -512,7 +512,7 @@
         </div>
 
         <div class="help">
-          Las etiquetas quedan guardadas localmente en este navegador. Si borras los datos del navegador o cambias de dispositivo, no se sincronizan.
+          Las etiquetas quedan guardadas localmente en este navegador. Modo activo: <strong id="storageModeLabel">cargando…</strong>. Si borras los datos del navegador o cambias de dispositivo, no se sincronizan.
         </div>
       </div>
 
@@ -546,9 +546,16 @@
       'Ruido / falso positivo'
     ];
 
-    const DB_NAME = 'poodle-mvp1-db';
+    const DB_NAME = 'poodle-mvp14-db';
     const DB_VERSION = 1;
     const STORE_NAME = 'events';
+    const LS_KEY = 'poodle-mvp14-events';
+
+    const storage = {
+      mode: 'memory',
+      db: null,
+      memoryRows: []
+    };
 
     const state = {
       db: null,
@@ -622,8 +629,53 @@
       el.sensitivityValue.textContent = String(state.threshold);
     }
 
-    function openDb() {
+
+    function canUseLocalStorage() {
+      try {
+        const key = '__poodle_test__';
+        localStorage.setItem(key, '1');
+        localStorage.removeItem(key);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function blobToDataUrl(blob) {
       return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('No se pudo convertir el audio.'));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function dataUrlToBlob(dataUrl) {
+      const response = await fetch(dataUrl);
+      return await response.blob();
+    }
+
+    function readLocalRows() {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return [];
+      try {
+        const rows = JSON.parse(raw);
+        return Array.isArray(rows) ? rows : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function writeLocalRows(rows) {
+      localStorage.setItem(LS_KEY, JSON.stringify(rows));
+    }
+
+    function openIndexedDb() {
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) {
+          reject(new Error('IndexedDB no disponible'));
+          return;
+        }
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onupgradeneeded = () => {
@@ -635,63 +687,165 @@
         };
 
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(request.error || new Error('No se pudo abrir IndexedDB'));
       });
+    }
+
+    async function openDb() {
+      try {
+        storage.db = await openIndexedDb();
+        storage.mode = 'idb';
+        return storage.db;
+      } catch (_) {
+        if (canUseLocalStorage()) {
+          storage.mode = 'localStorage';
+          return null;
+        }
+        storage.mode = 'memory';
+        return null;
+      }
     }
 
     function tx(storeMode = 'readonly') {
-      return state.db.transaction(STORE_NAME, storeMode).objectStore(STORE_NAME);
+      return storage.db.transaction(STORE_NAME, storeMode).objectStore(STORE_NAME);
     }
 
-    function addEventToDb(record) {
-      return new Promise((resolve, reject) => {
-        const request = tx('readwrite').add(record);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+    async function normalizeRecordForWrite(record) {
+      if (storage.mode === 'idb' || storage.mode === 'memory') {
+        return { ...record };
+      }
+      const cloned = { ...record };
+      if (cloned.audioBlob instanceof Blob) {
+        cloned.audioDataUrl = await blobToDataUrl(cloned.audioBlob);
+        delete cloned.audioBlob;
+      }
+      return cloned;
     }
 
-    function getAllEvents() {
-      return new Promise((resolve, reject) => {
-        const request = tx().getAll();
-        request.onsuccess = () => {
-          const rows = request.result.sort((a, b) => b.createdAt - a.createdAt);
-          resolve(rows);
-        };
-        request.onerror = () => reject(request.error);
-      });
+    async function hydrateRecordForUse(record) {
+      if (!record) return record;
+      if (storage.mode === 'idb' || storage.mode === 'memory') {
+        return { ...record };
+      }
+      return { ...record };
     }
 
-    function putEvent(record) {
-      return new Promise((resolve, reject) => {
-        const request = tx('readwrite').put(record);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+    async function addEventToDb(record) {
+      if (storage.mode === 'idb') {
+        return new Promise((resolve, reject) => {
+          const request = tx('readwrite').add(record);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      if (storage.mode === 'localStorage') {
+        const rows = readLocalRows();
+        rows.push(await normalizeRecordForWrite(record));
+        writeLocalRows(rows);
+        return;
+      }
+
+      storage.memoryRows.push({ ...record });
     }
 
-    function getEventById(id) {
-      return new Promise((resolve, reject) => {
-        const request = tx().get(id);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
+    async function getAllEvents() {
+      if (storage.mode === 'idb') {
+        return new Promise((resolve, reject) => {
+          const request = tx().getAll();
+          request.onsuccess = () => {
+            const rows = request.result.sort((a, b) => b.createdAt - a.createdAt);
+            resolve(rows);
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      const rows = storage.mode === 'localStorage' ? readLocalRows() : storage.memoryRows.slice();
+      return rows.sort((a, b) => b.createdAt - a.createdAt);
     }
 
-    function deleteEventFromDb(id) {
-      return new Promise((resolve, reject) => {
-        const request = tx('readwrite').delete(id);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+    async function putEvent(record) {
+      if (storage.mode === 'idb') {
+        return new Promise((resolve, reject) => {
+          const request = tx('readwrite').put(record);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      const rows = storage.mode === 'localStorage' ? readLocalRows() : storage.memoryRows.slice();
+      const idx = rows.findIndex((r) => r.id === record.id);
+      const next = await normalizeRecordForWrite(record);
+      if (idx >= 0) rows[idx] = next;
+      else rows.push(next);
+
+      if (storage.mode === 'localStorage') writeLocalRows(rows);
+      else storage.memoryRows = rows;
     }
 
-    function clearAllEvents() {
-      return new Promise((resolve, reject) => {
-        const request = tx('readwrite').clear();
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+    async function getEventById(id) {
+      if (storage.mode === 'idb') {
+        return new Promise((resolve, reject) => {
+          const request = tx().get(id);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      const rows = storage.mode === 'localStorage' ? readLocalRows() : storage.memoryRows;
+      const found = rows.find((r) => r.id === id);
+      return found ? { ...found } : null;
+    }
+
+    async function deleteEventFromDb(id) {
+      if (storage.mode === 'idb') {
+        return new Promise((resolve, reject) => {
+          const request = tx('readwrite').delete(id);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      const rows = (storage.mode === 'localStorage' ? readLocalRows() : storage.memoryRows).filter((r) => r.id !== id);
+      if (storage.mode === 'localStorage') writeLocalRows(rows);
+      else storage.memoryRows = rows;
+    }
+
+    async function clearAllEvents() {
+      if (storage.mode === 'idb') {
+        return new Promise((resolve, reject) => {
+          const request = tx('readwrite').clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      if (storage.mode === 'localStorage') {
+        writeLocalRows([]);
+        return;
+      }
+      storage.memoryRows = [];
+    }
+
+    async function getAudioBlobFromRecord(record) {
+      if (!record) return null;
+      if (record.audioBlob instanceof Blob) return record.audioBlob;
+      if (record.audioDataUrl) return await dataUrlToBlob(record.audioDataUrl);
+      return null;
+    }
+
+    function getAudioSrcFromRecord(record) {
+      if (!record) return '';
+      if (record.audioBlob instanceof Blob) return URL.createObjectURL(record.audioBlob);
+      if (record.audioDataUrl) return record.audioDataUrl;
+      return '';
+    }
+
+    function getStorageLabel() {
+      if (storage.mode === 'idb') return 'IndexedDB';
+      if (storage.mode === 'localStorage') return 'localStorage';
+      return 'solo memoria temporal';
     }
 
     function rmsFromTimeData(arr) {
@@ -901,7 +1055,7 @@
         const item = document.createElement('article');
         item.className = 'event';
 
-        const url = URL.createObjectURL(row.audioBlob);
+        const url = getAudioSrcFromRecord(row);
         const options = LABELS.map((label) => {
           const selected = row.label === label ? 'selected' : '';
           return `<option value="${escapeHtml(label)}" ${selected}>${escapeHtml(label)}</option>`;
@@ -1055,7 +1209,9 @@
           try {
             ev.currentTarget.disabled = true;
             ev.currentTarget.textContent = 'Recortando…';
-            const trimmed = await trimBlobByTime(record.audioBlob, values.startVal * 1000, values.endVal * 1000);
+            const sourceBlob = await getAudioBlobFromRecord(record);
+            if (!sourceBlob) throw new Error('No se pudo cargar el audio del clip.');
+            const trimmed = await trimBlobByTime(sourceBlob, values.startVal * 1000, values.endVal * 1000);
             record.audioBlob = trimmed.blob;
             record.durationMs = trimmed.durationMs;
             record.trimStartMs = 0;
@@ -1080,9 +1236,11 @@
           updateStatus('Recorte restablecido', false);
         });
 
-        audio.addEventListener('loadeddata', () => {
-          URL.revokeObjectURL(url);
-        }, { once: true });
+        if (url && url.startsWith('blob:')) {
+          audio.addEventListener('loadeddata', () => {
+            URL.revokeObjectURL(url);
+          }, { once: true });
+        }
 
         el.eventList.appendChild(item);
       });
@@ -1148,7 +1306,10 @@
           durationMs: clipMs,
           peakHz: state.lastPeakHz || 0,
           dbPeak: state.lastDbPeak || 0,
-          audioBlob
+          audioBlob,
+          trimStartMs: 0,
+          trimEndMs: clipMs,
+          trimInfo: 'Sin recorte manual'
         };
 
         await addEventToDb(record);
@@ -1293,6 +1454,11 @@
     async function init() {
       updateSensitivityDisplay();
       state.db = await openDb();
+      const storageModeLabel = document.getElementById('storageModeLabel');
+      if (storageModeLabel) storageModeLabel.textContent = getStorageLabel();
+      if (storage.mode === 'memory') {
+        updateStatus('Escucha lista · guardado temporal', false);
+      }
       await renderEvents();
 
       el.sensitivity.addEventListener('input', updateSensitivityDisplay);
@@ -1314,8 +1480,8 @@
 
     init().catch((error) => {
       console.error(error);
-      updateStatus('Error al abrir el almacenamiento local', false);
-      alert('No se pudo abrir el almacenamiento local del navegador.');
+      updateStatus('Error al iniciar la app', false);
+      alert('No se pudo iniciar la app correctamente.');
     });
   </script>
 </body>
