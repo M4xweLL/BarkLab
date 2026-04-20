@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1</title>
+  <title>Poodle MVP 1.1</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -31,7 +31,7 @@
     }
 
     .app {
-      max-width: 820px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 18px 14px 38px;
     }
@@ -63,7 +63,7 @@
       grid-template-columns: 1fr;
     }
 
-    @media (min-width: 820px) {
+    @media (min-width: 860px) {
       .grid {
         grid-template-columns: 340px 1fr;
         align-items: start;
@@ -337,6 +337,63 @@
       border: 1px solid #ffd8dc;
     }
 
+    .trim-box {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #f8faff;
+    }
+
+    .trim-title {
+      font-weight: 800;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .trim-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+
+    .trim-values {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .trim-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .tiny-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .trim-save-btn {
+      background: #eef6ff;
+      color: var(--accent);
+      border-color: #d3e5ff;
+    }
+
+    .trim-reset-btn {
+      background: #fffaf1;
+      color: var(--warning);
+      border-color: #ffe2b0;
+    }
+
     .help {
       margin-top: 12px;
       color: var(--muted);
@@ -365,9 +422,9 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1</h1>
+      <h1>Poodle MVP 1.1</h1>
       <div class="sub">
-        Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
+        Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. Ahora incluye limpieza automática de silencios y recorte manual simple para quitar voz al inicio o al final.
       </div>
     </section>
 
@@ -422,7 +479,7 @@
         </div>
 
         <div class="notice">
-          Recomendación: acerca el celular al poodle, usa el modo escucha solo cuando quieras observar una situación concreta y corrige etiquetas cuando te equivoques.
+          Recomendación: acerca el celular al poodle, usa la escucha solo en una situación concreta y si tu voz quedó mezclada, usa el recorte para dejar el ladrido más limpio.
         </div>
 
         <div class="help">
@@ -442,7 +499,7 @@
         <div id="eventList" class="event-list"></div>
 
         <div class="footer-note">
-          Categorías sugeridas: Alerta, Atención, Comida, Salir, Juego/emoción, Gemido/malestar, No sé y Ruido/falso positivo.
+          Categorías sugeridas: Alerta, Atención, Salir, Comida / premio, Juego/emoción, Gemido/malestar, No sé y Ruido/falso positivo.
         </div>
       </div>
     </section>
@@ -452,8 +509,8 @@
     const LABELS = [
       'Alerta',
       'Atención',
-      'Comida',
       'Salir',
+      'Comida / premio',
       'Juego / emoción',
       'Gemido / malestar',
       'No sé',
@@ -461,7 +518,7 @@
     ];
 
     const DB_NAME = 'poodle-mvp1-db';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
     const STORE_NAME = 'events';
 
     const state = {
@@ -491,7 +548,9 @@
       silenceHoldMs: 650,
       minClipMs: 220,
       minCooldownMs: 900,
-      currentGuess: '—'
+      currentGuess: '—',
+      trimThresholdDb: -42,
+      trimPaddingMs: 120
     };
 
     const el = {
@@ -671,71 +730,6 @@
       return 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     }
 
-    async function renderEvents() {
-      const rows = await getAllEvents();
-      el.eventsCount.textContent = rows.length + (rows.length === 1 ? ' evento' : ' eventos');
-
-      if (!rows.length) {
-        el.eventList.innerHTML = '<div class="empty">Aún no hay clips guardados.<br>Presiona <strong>Empezar a escuchar</strong> y luego etiqueta los sonidos detectados.</div>';
-        return;
-      }
-
-      el.eventList.innerHTML = '';
-
-      rows.forEach((row) => {
-        const item = document.createElement('article');
-        item.className = 'event';
-
-        const url = URL.createObjectURL(row.audioBlob);
-        const options = LABELS.map((label) => {
-          const selected = row.label === label ? 'selected' : '';
-          return `<option value="${escapeHtml(label)}" ${selected}>${escapeHtml(label)}</option>`;
-        }).join('');
-
-        item.innerHTML = `
-          <div class="event-top">
-            <div>
-              <div class="event-time">${formatDateTime(row.createdAt)}</div>
-              <div class="event-meta">Duración: ${formatDuration(row.durationMs)} · Pico aprox.: ${row.peakHz || 0} Hz · Nivel: ${Number(row.dbPeak || 0).toFixed(1)} dB</div>
-            </div>
-            <span class="badge">${escapeHtml(row.autoGuess || 'Sin sugerencia')}</span>
-          </div>
-
-          <audio controls preload="metadata" src="${url}"></audio>
-
-          <div class="event-actions">
-            <select data-id="${row.id}" aria-label="Cambiar etiqueta">
-              ${options}
-            </select>
-            <button class="small-btn save-btn" data-save-id="${row.id}">Guardar</button>
-            <button class="small-btn delete-btn" data-delete-id="${row.id}">Eliminar</button>
-          </div>
-        `;
-
-        item.querySelector('[data-save-id]').addEventListener('click', async (ev) => {
-          const id = ev.currentTarget.getAttribute('data-save-id');
-          const select = item.querySelector('select');
-          const record = await getEventById(id);
-          if (!record) return;
-          record.label = select.value;
-          await putEvent(record);
-          updateStatus('Etiqueta guardada', false);
-          renderEvents();
-        });
-
-        item.querySelector('[data-delete-id]').addEventListener('click', async (ev) => {
-          const id = ev.currentTarget.getAttribute('data-delete-id');
-          const ok = window.confirm('¿Eliminar este clip y su etiqueta?');
-          if (!ok) return;
-          await deleteEventFromDb(id);
-          updateStatus('Clip eliminado', false);
-          renderEvents();
-        });
-
-        el.eventList.appendChild(item);
-      });
-    }
-
     function escapeHtml(value) {
       return String(value)
         .replace(/&/g, '&amp;')
@@ -743,6 +737,165 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    async function blobToAudioBuffer(blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        return await ctx.decodeAudioData(arrayBuffer.slice(0));
+      } finally {
+        await ctx.close();
+      }
+    }
+
+    function copySegmentToBuffer(sourceBuffer, startSample, endSample) {
+      const frameCount = Math.max(1, endSample - startSample);
+      const offline = new OfflineAudioContext(sourceBuffer.numberOfChannels, frameCount, sourceBuffer.sampleRate);
+      const trimmed = offline.createBuffer(sourceBuffer.numberOfChannels, frameCount, sourceBuffer.sampleRate);
+      for (let ch = 0; ch < sourceBuffer.numberOfChannels; ch += 1) {
+        const sourceData = sourceBuffer.getChannelData(ch);
+        const targetData = trimmed.getChannelData(ch);
+        targetData.set(sourceData.subarray(startSample, endSample));
+      }
+      return trimmed;
+    }
+
+    function audioBufferToWavBlob(buffer) {
+      const numberOfChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const bitDepth = 16;
+      const samples = buffer.length;
+      const blockAlign = numberOfChannels * bitDepth / 8;
+      const byteRate = sampleRate * blockAlign;
+      const dataSize = samples * blockAlign;
+      const bufferSize = 44 + dataSize;
+      const arrayBuffer = new ArrayBuffer(bufferSize);
+      const view = new DataView(arrayBuffer);
+
+      let offset = 0;
+      const writeString = (str) => {
+        for (let i = 0; i < str.length; i += 1) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+        offset += str.length;
+      };
+
+      writeString('RIFF');
+      view.setUint32(offset, 36 + dataSize, true); offset += 4;
+      writeString('WAVE');
+      writeString('fmt ');
+      view.setUint32(offset, 16, true); offset += 4;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint16(offset, numberOfChannels, true); offset += 2;
+      view.setUint32(offset, sampleRate, true); offset += 4;
+      view.setUint32(offset, byteRate, true); offset += 4;
+      view.setUint16(offset, blockAlign, true); offset += 2;
+      view.setUint16(offset, bitDepth, true); offset += 2;
+      writeString('data');
+      view.setUint32(offset, dataSize, true); offset += 4;
+
+      const channelData = [];
+      for (let ch = 0; ch < numberOfChannels; ch += 1) {
+        channelData.push(buffer.getChannelData(ch));
+      }
+
+      let pos = offset;
+      for (let i = 0; i < samples; i += 1) {
+        for (let ch = 0; ch < numberOfChannels; ch += 1) {
+          let sample = channelData[ch][i] || 0;
+          sample = Math.max(-1, Math.min(1, sample));
+          view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          pos += 2;
+        }
+      }
+
+      return new Blob([arrayBuffer], { type: 'audio/wav' });
+    }
+
+    async function trimBlobByTime(blob, startMs, endMs) {
+      const sourceBuffer = await blobToAudioBuffer(blob);
+      const safeStartMs = Math.max(0, startMs);
+      const safeEndMs = Math.min(endMs, (sourceBuffer.duration * 1000));
+      if (safeEndMs - safeStartMs < 120) {
+        throw new Error('El recorte quedó demasiado corto.');
+      }
+      const startSample = Math.max(0, Math.floor((safeStartMs / 1000) * sourceBuffer.sampleRate));
+      const endSample = Math.min(sourceBuffer.length, Math.ceil((safeEndMs / 1000) * sourceBuffer.sampleRate));
+      const trimmedBuffer = copySegmentToBuffer(sourceBuffer, startSample, endSample);
+      return {
+        blob: audioBufferToWavBlob(trimmedBuffer),
+        durationMs: Math.round(trimmedBuffer.duration * 1000)
+      };
+    }
+
+    async function autoTrimBlob(blob) {
+      const sourceBuffer = await blobToAudioBuffer(blob);
+      const sampleRate = sourceBuffer.sampleRate;
+      const frameSize = 1024;
+      const channelData = sourceBuffer.getChannelData(0);
+      const thresholdRms = Math.pow(10, state.trimThresholdDb / 20);
+
+      let firstFrame = -1;
+      let lastFrame = -1;
+
+      for (let i = 0; i < channelData.length; i += frameSize) {
+        let sum = 0;
+        const max = Math.min(channelData.length, i + frameSize);
+        for (let j = i; j < max; j += 1) {
+          const v = channelData[j];
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / (max - i || 1));
+        if (rms >= thresholdRms) {
+          if (firstFrame === -1) firstFrame = i;
+          lastFrame = max;
+        }
+      }
+
+      if (firstFrame === -1 || lastFrame === -1) {
+        return {
+          blob,
+          durationMs: Math.round(sourceBuffer.duration * 1000),
+          trimInfo: 'Sin recorte automático'
+        };
+      }
+
+      const paddingSamples = Math.floor((state.trimPaddingMs / 1000) * sampleRate);
+      const startSample = Math.max(0, firstFrame - paddingSamples);
+      const endSample = Math.min(sourceBuffer.length, lastFrame + paddingSamples);
+
+      if (endSample - startSample < Math.floor(0.12 * sampleRate)) {
+        return {
+          blob,
+          durationMs: Math.round(sourceBuffer.duration * 1000),
+          trimInfo: 'Sin recorte automático'
+        };
+      }
+
+      const trimmedBuffer = copySegmentToBuffer(sourceBuffer, startSample, endSample);
+      const originalMs = Math.round(sourceBuffer.duration * 1000);
+      const trimmedMs = Math.round(trimmedBuffer.duration * 1000);
+      return {
+        blob: audioBufferToWavBlob(trimmedBuffer),
+        durationMs: trimmedMs,
+        trimInfo: trimmedMs < originalMs ? `Auto-recorte: ${((originalMs - trimmedMs) / 1000).toFixed(2)} s removidos` : 'Sin recorte automático'
+      };
+    }
+
+    function clampTrimValues(startInput, endInput, durationSec) {
+      let startVal = Number(startInput.value);
+      let endVal = Number(endInput.value);
+      if (startVal > endVal - 0.1) {
+        if (document.activeElement === startInput) {
+          endVal = Math.min(durationSec, startVal + 0.1);
+          endInput.value = endVal.toFixed(2);
+        } else {
+          startVal = Math.max(0, endVal - 0.1);
+          startInput.value = startVal.toFixed(2);
+        }
+      }
+      return { startVal, endVal };
     }
 
     function resetSessionCounters() {
@@ -765,6 +918,144 @@
       }, 250);
     }
 
+    async function renderEvents() {
+      const rows = await getAllEvents();
+      el.eventsCount.textContent = rows.length + (rows.length === 1 ? ' evento' : ' eventos');
+
+      if (!rows.length) {
+        el.eventList.innerHTML = '<div class="empty">Aún no hay clips guardados.<br>Presiona <strong>Empezar a escuchar</strong> y luego etiqueta los sonidos detectados.</div>';
+        return;
+      }
+
+      el.eventList.innerHTML = '';
+
+      rows.forEach((row) => {
+        const item = document.createElement('article');
+        item.className = 'event';
+
+        const url = URL.createObjectURL(row.audioBlob);
+        const safeDurationSec = Math.max(0.15, (row.durationMs || 1000) / 1000);
+        const trimStartSec = Number((row.trimStartMs || 0) / 1000).toFixed(2);
+        const trimEndSec = Number((row.trimEndMs != null ? row.trimEndMs : row.durationMs || 1000) / 1000).toFixed(2);
+        const options = LABELS.map((label) => {
+          const selected = row.label === label ? 'selected' : '';
+          return `<option value="${escapeHtml(label)}" ${selected}>${escapeHtml(label)}</option>`;
+        }).join('');
+
+        item.innerHTML = `
+          <div class="event-top">
+            <div>
+              <div class="event-time">${formatDateTime(row.createdAt)}</div>
+              <div class="event-meta">Duración: ${formatDuration(row.durationMs)} · Pico aprox.: ${row.peakHz || 0} Hz · Nivel: ${Number(row.dbPeak || 0).toFixed(1)} dB</div>
+              <div class="event-meta">${escapeHtml(row.trimInfo || 'Sin recorte')}</div>
+            </div>
+            <span class="badge">${escapeHtml(row.autoGuess || 'Sin sugerencia')}</span>
+          </div>
+
+          <audio controls preload="metadata" src="${url}"></audio>
+
+          <div class="event-actions">
+            <select data-id="${row.id}" aria-label="Cambiar etiqueta">
+              ${options}
+            </select>
+            <button class="small-btn save-btn" data-save-id="${row.id}">Guardar</button>
+            <button class="small-btn delete-btn" data-delete-id="${row.id}">Eliminar</button>
+          </div>
+
+          <div class="trim-box">
+            <div class="trim-title">Recorte simple del clip</div>
+            <div class="trim-grid">
+              <div>
+                <label for="trimStart_${row.id}">Inicio del recorte: <strong data-start-label>${trimStartSec} s</strong></label>
+                <input id="trimStart_${row.id}" type="range" min="0" max="${safeDurationSec.toFixed(2)}" step="0.05" value="0" data-trim-start />
+              </div>
+              <div>
+                <label for="trimEnd_${row.id}">Fin del recorte: <strong data-end-label>${safeDurationSec.toFixed(2)} s</strong></label>
+                <input id="trimEnd_${row.id}" type="range" min="0.10" max="${safeDurationSec.toFixed(2)}" step="0.05" value="${safeDurationSec.toFixed(2)}" data-trim-end />
+              </div>
+            </div>
+            <div class="trim-values">Úsalo si quedó tu voz antes del ladrido o si hay ruido largo al final.</div>
+            <div class="trim-actions">
+              <button class="tiny-btn trim-save-btn" data-trim-id="${row.id}">Aplicar recorte</button>
+              <button class="tiny-btn trim-reset-btn" data-trim-reset-id="${row.id}">Restablecer</button>
+            </div>
+          </div>
+        `;
+
+        const select = item.querySelector('select');
+        const trimStartInput = item.querySelector('[data-trim-start]');
+        const trimEndInput = item.querySelector('[data-trim-end]');
+        const startLabel = item.querySelector('[data-start-label]');
+        const endLabel = item.querySelector('[data-end-label]');
+
+        const refreshTrimLabels = () => {
+          const values = clampTrimValues(trimStartInput, trimEndInput, safeDurationSec);
+          startLabel.textContent = Number(values.startVal).toFixed(2) + ' s';
+          endLabel.textContent = Number(values.endVal).toFixed(2) + ' s';
+        };
+
+        trimStartInput.addEventListener('input', refreshTrimLabels);
+        trimEndInput.addEventListener('input', refreshTrimLabels);
+        refreshTrimLabels();
+
+        item.querySelector('[data-save-id]').addEventListener('click', async (ev) => {
+          const id = ev.currentTarget.getAttribute('data-save-id');
+          const record = await getEventById(id);
+          if (!record) return;
+          record.label = select.value;
+          await putEvent(record);
+          updateStatus('Etiqueta guardada', false);
+          renderEvents();
+        });
+
+        item.querySelector('[data-delete-id]').addEventListener('click', async (ev) => {
+          const id = ev.currentTarget.getAttribute('data-delete-id');
+          const ok = window.confirm('¿Eliminar este clip y su etiqueta?');
+          if (!ok) return;
+          await deleteEventFromDb(id);
+          updateStatus('Clip eliminado', false);
+          renderEvents();
+        });
+
+        item.querySelector('[data-trim-id]').addEventListener('click', async (ev) => {
+          const id = ev.currentTarget.getAttribute('data-trim-id');
+          const record = await getEventById(id);
+          if (!record) return;
+          const values = clampTrimValues(trimStartInput, trimEndInput, safeDurationSec);
+          try {
+            ev.currentTarget.disabled = true;
+            ev.currentTarget.textContent = 'Recortando…';
+            const trimmed = await trimBlobByTime(record.audioBlob, values.startVal * 1000, values.endVal * 1000);
+            record.audioBlob = trimmed.blob;
+            record.durationMs = trimmed.durationMs;
+            record.trimStartMs = 0;
+            record.trimEndMs = trimmed.durationMs;
+            record.trimInfo = `Recorte manual aplicado (${values.startVal.toFixed(2)} s a ${values.endVal.toFixed(2)} s)`;
+            await putEvent(record);
+            updateStatus('Recorte guardado', false);
+            renderEvents();
+          } catch (error) {
+            alert(error.message || 'No se pudo recortar el audio.');
+          } finally {
+            ev.currentTarget.disabled = false;
+            ev.currentTarget.textContent = 'Aplicar recorte';
+          }
+        });
+
+        item.querySelector('[data-trim-reset-id]').addEventListener('click', () => {
+          trimStartInput.value = '0';
+          trimEndInput.value = safeDurationSec.toFixed(2);
+          refreshTrimLabels();
+        });
+
+        item.querySelector('audio').addEventListener('loadeddata', () => {
+          URL.revokeObjectURL(url);
+        }, { once: true });
+
+        el.eventList.appendChild(item);
+      });
+    }
+
     function startRecorder() {
       if (!state.stream) return;
       if (state.mediaRecorder && state.mediaRecorder.state === 'recording') return;
@@ -781,10 +1072,25 @@
         const clipMs = Date.now() - state.eventStartedAt;
         if (clipMs < state.minClipMs || !state.chunks.length) return;
 
-        const audioBlob = new Blob(state.chunks, { type: state.mediaRecorder.mimeType || 'audio/webm' });
+        const originalBlob = new Blob(state.chunks, { type: state.mediaRecorder.mimeType || 'audio/webm' });
+        let processedBlob = originalBlob;
+        let processedDurationMs = clipMs;
+        let trimInfo = 'Sin recorte automático';
+
+        try {
+          const autoTrim = await autoTrimBlob(originalBlob);
+          processedBlob = autoTrim.blob;
+          processedDurationMs = autoTrim.durationMs;
+          trimInfo = autoTrim.trimInfo;
+        } catch (_) {
+          processedBlob = originalBlob;
+          processedDurationMs = clipMs;
+          trimInfo = 'Sin recorte automático';
+        }
+
         const autoGuess = classifySimple({
           peakHz: state.lastPeakHz,
-          durationMs: clipMs,
+          durationMs: processedDurationMs,
           dbPeak: state.lastDbPeak || 0
         });
 
@@ -793,10 +1099,13 @@
           createdAt: Date.now(),
           label: 'No sé',
           autoGuess,
-          durationMs: clipMs,
+          durationMs: processedDurationMs,
           peakHz: state.lastPeakHz || 0,
           dbPeak: state.lastDbPeak || 0,
-          audioBlob
+          audioBlob: processedBlob,
+          trimStartMs: 0,
+          trimEndMs: processedDurationMs,
+          trimInfo
         };
 
         await addEventToDb(record);
@@ -804,7 +1113,7 @@
         el.sessionEvents.textContent = String(state.sessionEventCount);
         state.currentGuess = autoGuess;
         el.lastGuess.textContent = autoGuess;
-        updateStatus('Evento guardado. Revisa y etiqueta.', true);
+        updateStatus('Evento guardado. Revisa, recorta y etiqueta.', true);
         renderEvents();
       };
 
@@ -839,7 +1148,7 @@
       el.meterFill.style.width = meterPct + '%';
 
       const now = Date.now();
-      const crossed = meterPct > state.threshold;
+      const crossed = db > state.threshold;
 
       if (crossed) {
         state.lastSoundAt = now;
