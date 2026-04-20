@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#6b4eff" />
-  <title>Poodle MVP 1.5</title>
+  <title>Poodle MVP 1.6</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -451,7 +451,7 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Poodle MVP 1.5</h1>
+      <h1>Poodle MVP 1.6</h1>
       <div class="sub">
         Prototipo web simple para detectar sonidos, grabar clips cortos y etiquetarlos manualmente. No intenta “traducir” a tu perro: te ayuda a construir contexto útil.
       </div>
@@ -1237,7 +1237,10 @@
         });
 
         item.querySelector('[data-trim-id]').addEventListener('click', async (ev) => {
-          const id = ev.currentTarget.getAttribute('data-trim-id');
+          const saveTrimBtn = ev.currentTarget;
+          const id = saveTrimBtn ? saveTrimBtn.getAttribute('data-trim-id') : null;
+          if (!id) return;
+
           const record = await getEventById(id);
           if (!record) return;
 
@@ -1245,8 +1248,10 @@
           applyTrimValuesToControls(values, true);
 
           try {
-            ev.currentTarget.disabled = true;
-            ev.currentTarget.textContent = 'Recortando…';
+            if (saveTrimBtn) {
+              saveTrimBtn.disabled = true;
+              saveTrimBtn.textContent = 'Recortando…';
+            }
             const sourceBlob = await getAudioBlobFromRecord(record);
             if (!sourceBlob) throw new Error('No se pudo cargar el audio del clip.');
             const trimmed = await trimBlobByTime(sourceBlob, values.startVal * 1000, values.endVal * 1000);
@@ -1261,8 +1266,10 @@
           } catch (error) {
             alert(error.message || 'No se pudo recortar el audio.');
           } finally {
-            ev.currentTarget.disabled = false;
-            ev.currentTarget.textContent = 'Aplicar recorte';
+            if (saveTrimBtn && saveTrimBtn.isConnected) {
+              saveTrimBtn.disabled = false;
+              saveTrimBtn.textContent = 'Aplicar recorte';
+            }
           }
         });
 
